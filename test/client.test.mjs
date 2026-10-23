@@ -46,6 +46,7 @@ function loadClient(React) {
   }
   const navigator = { language: 'zh-CN' }
   vm.runInNewContext(source, { window, navigator, URL, console, setTimeout, clearTimeout })
+  assert.equal(loaded.id, 'dsh-background-studio')
   return loaded.factory((name) => {
     assert.equal(name, 'react')
     return React
@@ -101,11 +102,11 @@ test('client module registers a shell.overlay entry and renders its empty state'
   const { dictionaries, registrations } = mount(client)
 
   assert.equal(dictionaries.length, 1)
-  assert.equal(dictionaries[0][0], 'dsh-background')
+  assert.equal(dictionaries[0][0], 'dsh-background-studio')
   assert.deepEqual(Object.keys(dictionaries[0][1].zh).sort(), Object.keys(dictionaries[0][1].en).sort())
   assert.equal(registrations.length, 1)
   assert.equal(registrations[0].options.name, 'shell.overlay')
-  assert.equal(registrations[0].options.id, 'dsh-background')
+  assert.equal(registrations[0].options.id, 'dsh-background-studio')
 
   const tree = registrations[0].component({ t: (key) => key })
   const nodes = flatten(tree)
@@ -115,12 +116,15 @@ test('client module registers a shell.overlay entry and renders its empty state'
   const fab = nodes.find((node) => node.props && node.props.className === 'dshbg-fab')
   assert.ok(fab)
   assert.equal(fab.props['aria-label'], '背景图片')
+  assert.equal(typeof fab.props.onPointerDown, 'function')
+  assert.equal(typeof fab.props.onClick, 'function')
+  assert.match(fab.props.title, /拖动/)
 })
 
 test('client module renders its editor with a loaded image', () => {
   const React = createReactStub([
     { enabled: true, fit: 'tile', opacity: 0.8, blur: 6, dim: 0.2, surface: 0.6 },
-    { url: '/dsh-background/image?v=1', name: 'wallpaper.png', size: 2048, contentType: 'image/png' },
+    { url: '/dsh-background-studio/image?v=1', name: 'wallpaper.png', size: 2048, contentType: 'image/png' },
     'ok',
     false,
     false,
@@ -130,7 +134,7 @@ test('client module renders its editor with a loaded image', () => {
     'saved',
     false,
     false,
-    'http://127.0.0.1:1/dsh-background/image?v=1',
+    'http://127.0.0.1:1/dsh-background-studio/image?v=1',
   ])
   const client = loadClient(React)
   const { registrations } = mount(client)
@@ -138,6 +142,12 @@ test('client module renders its editor with a loaded image', () => {
   const nodes = flatten(tree)
   const dialog = nodes.find((node) => node.props && node.props.className === 'dshbg-dialog')
   assert.ok(dialog)
+  const head = nodes.find((node) => node.props && node.props.className === 'dshbg-head')
+  assert.ok(head)
+  assert.equal(typeof head.props.onPointerDown, 'function')
+  assert.equal(typeof head.props.onDoubleClick, 'function')
+  const grip = nodes.find((node) => node.props && node.props.className === 'dshbg-grip')
+  assert.ok(grip)
   const pressed = nodes.filter((node) => node.props && node.props['aria-pressed'] === 'true')
   assert.equal(pressed.length, 1)
   assert.equal(pressed[0].props.children, '平铺')

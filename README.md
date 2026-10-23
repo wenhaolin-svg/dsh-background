@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="./icon.svg" width="80" height="80" alt="dsh-background icon" />
+  <img src="./icon.svg" width="80" height="80" alt="dsh-background-studio icon" />
 </p>
 
-<h1 align="center">dsh-background</h1>
+<h1 align="center">dsh-background-studio</h1>
 
 <p align="center">用你自己的图片，替换 DeepSeek Harness 的纯色背景。</p>
 
 这是一个 DeepSeek Harness（DSH）插件。它会在界面右侧边缘中间放一个低调的圆形按钮，点开即可从电脑的任意文件夹导入一张图片，并在不离开当前页面的情况下调整铺满方式、模糊、遮罩和界面不透明度。设置会自动保存，重启 DSH 后仍然有效。
 
-> 当前版本：`1.0.0` · 面向 DSH `0.2.1-rc.2` 的 Web GUI · 无构建步骤、无第三方运行时依赖。
+> 当前版本：`1.1.1` · 面向 DSH `0.2.1-rc.2` 的 Web GUI · 无构建步骤、无第三方运行时依赖。
 
 ---
 
@@ -16,6 +16,7 @@
 
 - **本地图片替换纯色背景**：JPG、PNG、WebP、GIF、AVIF，最大 25 MB。
 - **从任意文件夹导入**：点击按钮打开系统文件选择器，或直接把图片拖进预览框。
+- **可拖动的小面板与按钮**：按住标题栏移动面板，双击标题栏回到中间；右侧圆形按钮也能直接拖动。两者都被限制在窗口内，不会拖出屏幕。
 - **实时编辑**：
   - 铺满 / 完整 / 拉伸 / 平铺
   - 图片可见度
@@ -40,14 +41,16 @@
 4. 在包名输入框中粘贴你的仓库地址，例如：
 
    ```text
-   https://github.com/你的GitHub用户名/dsh-background
+   https://github.com/你的GitHub用户名/dsh-background-studio
    ```
 
 5. 点击 **安装**，等待完成。
-6. 安装完成后如果组合包没有自动启用，在插件列表里找到 **dsh-background** 并打开开关。
+6. 安装完成后如果组合包没有自动启用，在插件列表里找到 **dsh-background-studio** 并打开开关。
 7. 刷新 DSH 页面（或重启 DSH）。界面右侧中部出现圆形图片按钮即安装成功。
 
-> GitHub 仓库的根目录必须直接包含本项目的 `package.json`。不要把它放进 `packages/dsh-background/` 之类的子目录后再安装，否则 DSH 找不到组合包。
+> 包名现在是 `dsh-background-studio`。GitHub 仓库建议同名；如果你保留旧仓库名 `dsh-background`，安装 URL 用旧地址也可以，DSH 会以仓库里的 `package.json` 为准。仓库根目录必须直接包含 `package.json`，不要放进 `packages/dsh-background-studio/` 之类的子目录。
+
+> **从 1.0.x 升级**：先在插件页卸载旧的 `dsh-background`，再安装新的 `dsh-background-studio`。图片和设置仍在 `%USERPROFILE%\.dsh\dsh-background\`，不会被删除。
 
 ### 方式二：从本地文件夹安装（开发 / 试用）
 
@@ -75,19 +78,21 @@ dsh plugin --profile desktop add "D:\dsh\插件"
 
 ## 使用
 
-1. 点击界面右侧边缘中部的圆形图片按钮（鼠标移上去会变清晰）。
-2. 点击 **选择图片**，在系统文件选择器中进入任意文件夹，选中一张图片。
+1. 点击界面右侧边缘中部的圆形图片按钮（鼠标移上去会变清晰）。这个按钮本身也可以按住拖动；不移动直接松开就是打开面板。
+2. 如果面板挡住对话栏，按住面板顶部的标题栏拖动；双击标题栏可以回到屏幕中间。面板外的区域仍然可以正常点击。面板和按钮都只能在窗口内移动，四周会留出边距。
+3. 点击 **选择图片**，在系统文件选择器中进入任意文件夹，选中一张图片。
    - 也可以直接把图片拖到预览区域。
-3. 用下面的控件调整效果，背景会立即变化：
+4. 用下面的控件调整效果，背景会立即变化：
    - **铺满方式**：`铺满` 会裁切图片填满窗口；`完整` 会保留整张图并留边；`拉伸` 会把图片拉到窗口比例；`平铺` 会重复图片。
    - **图片可见度**：10% 接近隐藏，100% 完全显示。
    - **背景模糊**：0–24px。
    - **背景遮罩**：在图片上叠加一层与主题匹配的纯色，提升文字对比度。
    - **界面不透明度**：控制聊天区、侧栏等界面表面的透明度。调高更容易读字，调低更容易看清图片。
-4. 点击 **完成**。所有修改已经自动保存。
+5. 点击 **完成**。所有修改已经自动保存。
 
 ### 关闭、恢复与移除
 
+- **关闭面板**：点右上角 **×**、按 `Esc`，或点 **完成**。面板外的区域可以直接操作，所以点击外面不会自动关闭。
 - **启用背景** 开关：暂时关闭背景，图片和设置都保留。
 - **恢复默认**：把铺满方式、可见度、模糊、遮罩、界面不透明度恢复为默认值，但保留图片。
 - **移除图片**：第一次点击会变成“再次点击确认”，再点一次才真正删除图片并恢复原生界面。
@@ -102,6 +107,8 @@ dsh plugin --profile desktop add "D:\dsh\插件"
   ```text
   %USERPROFILE%\.dsh\dsh-background\
   ```
+
+  > 数据目录沿用旧名 `dsh-background`，所以从 1.0.x 升级到 1.1.x 时，之前导入的图片和设置不会丢。
 
   其中：
 
@@ -131,7 +138,7 @@ dsh plugin --profile desktop add "D:\dsh\插件"
 
 - 确认插件已安装并在插件页处于启用状态。
 - 刷新页面或完全退出后重新打开 DSH。
-- 打开 DSH 的日志，搜索 `dsh-background`，看是否有激活失败信息。
+- 打开 DSH 的日志，搜索 `dsh-background-studio`，看是否有激活失败信息。
 - 如果刚修改过代码，先关闭再启用插件，让 Client 模块重新加载。
 
 ### 图片导入了，但背景没变化
@@ -174,7 +181,7 @@ node test/client.test.mjs
 目录结构：
 
 ```text
-dsh-background/
+dsh-background-studio/
 ├─ index.js             Host：图片/设置存储与 HTTP 路由
 ├─ client.js            Client：右侧边缘按钮、编辑面板、背景 CSS
 ├─ cordis.patch.yml     Bundle 行

@@ -77,12 +77,12 @@ test('host routes upload, serve, update and remove an image', async () => {
     await once(server, 'listening')
     const base = `http://127.0.0.1:${server.address().port}`
 
-    const empty = await json(`${base}/dsh-background/api/state`)
+    const empty = await json(`${base}/dsh-background-studio/api/state`)
     assert.equal(empty.response.status, 200)
     assert.equal(empty.payload.image, null)
     assert.equal(empty.payload.settings.enabled, false)
 
-    const uploaded = await json(`${base}/dsh-background/api/image`, {
+    const uploaded = await json(`${base}/dsh-background-studio/api/image`, {
       method: 'POST',
       headers: {
         'Content-Type': 'image/png',
@@ -100,7 +100,7 @@ test('host routes upload, serve, update and remove an image', async () => {
     assert.equal(image.headers.get('content-type'), 'image/png')
     assert.deepEqual(Buffer.from(await image.arrayBuffer()), PNG)
 
-    const changed = await json(`${base}/dsh-background/api/settings`, {
+    const changed = await json(`${base}/dsh-background-studio/api/settings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fit: 'tile', opacity: 0.4, blur: 100, dim: -1, surface: 0.5 }),
@@ -112,13 +112,13 @@ test('host routes upload, serve, update and remove an image', async () => {
     assert.equal(changed.payload.settings.dim, 0)
     assert.equal(changed.payload.settings.surface, 0.5)
 
-    const removed = await json(`${base}/dsh-background/api/image`, { method: 'DELETE' })
+    const removed = await json(`${base}/dsh-background-studio/api/image`, { method: 'DELETE' })
     assert.equal(removed.response.status, 200)
     assert.equal(removed.payload.image, null)
     assert.equal(removed.payload.settings.enabled, false)
-    assert.equal((await fetch(`${base}/dsh-background/image`)).status, 404)
+    assert.equal((await fetch(`${base}/dsh-background-studio/image`)).status, 404)
 
-    const rejected = await fetch(`${base}/dsh-background/api/image`, {
+    const rejected = await fetch(`${base}/dsh-background-studio/api/image`, {
       method: 'POST',
       headers: { 'Content-Type': 'image/svg+xml' },
       body: Buffer.from('<svg/>'),

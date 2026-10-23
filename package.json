@@ -1,6 +1,6 @@
 {
-  "name": "dsh-background",
-  "version": "1.0.0",
+  "name": "dsh-background-studio",
+  "version": "1.1.1",
   "description": "Replace the DeepSeek Harness solid background with your own image, with an in-app editor for fit, blur, veil and interface opacity.",
   "type": "module",
   "main": "index.js",
@@ -31,6 +31,14 @@
     "image"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wenhaolin-svg/dsh-background.git"
+  },
+  "homepage": "https://github.com/wenhaolin-svg/dsh-background#readme",
+  "bugs": {
+    "url": "https://github.com/wenhaolin-svg/dsh-background/issues"
+  },
   "icon": "./icon.svg",
   "engines": {
     "node": ">=22"

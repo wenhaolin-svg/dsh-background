@@ -1,17 +1,18 @@
-/* dsh-background — browser half. Plain script loaded by DSH's Client module loader. */
+/* dsh-background-studio — browser half. Plain script loaded by DSH's Client module loader. */
 window.__ModuleLoader__.load({
-  id: 'dsh-background',
+  id: 'dsh-background-studio',
   factory(require) {
     const React = require('react')
     const h = React.createElement
     const { useEffect, useMemo, useRef, useState } = React
 
-    const NS = 'dsh-background'
-    const API_STATE = '/dsh-background/api/state'
-    const API_SETTINGS = '/dsh-background/api/settings'
-    const API_IMAGE = '/dsh-background/api/image'
+    const NS = 'dsh-background-studio'
+    const API_STATE = '/dsh-background-studio/api/state'
+    const API_SETTINGS = '/dsh-background-studio/api/settings'
+    const API_IMAGE = '/dsh-background-studio/api/image'
     const MAX_CLIENT_FILE = 40 * 1024 * 1024
     const MAX_UPLOAD = 25 * 1024 * 1024
+    const FAB_POSITION_KEY = 'dsh-background-studio:fab-position'
 
     const DEFAULT_SETTINGS = Object.freeze({
       enabled: true,
@@ -26,6 +27,8 @@ window.__ModuleLoader__.load({
       fab: '背景图片',
       title: '背景图片',
       subtitle: '用自己的图片替换 Harness 的纯色背景',
+      fabHint: '直接拖动可移动按钮，范围限制在窗口内',
+      dragHint: '拖动标题栏移动窗口；双击回到中间',
       close: '关闭',
       enable: '启用背景',
       enableHint: '关闭后恢复默认纯色界面',
@@ -70,6 +73,8 @@ window.__ModuleLoader__.load({
       fab: 'Background image',
       title: 'Background image',
       subtitle: 'Replace the Harness solid background with your own picture.',
+      fabHint: 'Drag this button to move it; it stays inside the window',
+      dragHint: 'Drag the title bar to move this window; double-click to re-center.',
       close: 'Close',
       enable: 'Enable background',
       enableHint: 'Turn off to restore the normal solid interface.',
@@ -134,6 +139,26 @@ window.__ModuleLoader__.load({
         return new URL(value, window.location.href).href
       } catch {
         return value
+      }
+    }
+
+    function readStoredPosition(key) {
+      try {
+        const parsed = JSON.parse(window.localStorage.getItem(key) || 'null')
+        if (parsed && Number.isFinite(parsed.x) && Number.isFinite(parsed.y)) {
+          return { x: parsed.x, y: parsed.y }
+        }
+      } catch {
+        /* storage may be unavailable on a custom protocol */
+      }
+      return null
+    }
+
+    function writeStoredPosition(key, position) {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(position))
+      } catch {
+        /* position persistence is optional */
       }
     }
 
@@ -470,12 +495,14 @@ html[data-dshbg="on"] body[data-ds-dark-theme] {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.13);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   opacity: 0.34;
   transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
   -webkit-user-select: none;
   user-select: none;
 }
+.dshbg-fab.is-dragging { cursor: grabbing; opacity: 1; transition: none; }
 .dshbg-fab:hover,
 .dshbg-fab:focus-visible,
 .dshbg-fab[data-active="true"] { opacity: 1; transform: translateY(-50%) scale(1.04); }
@@ -498,20 +525,12 @@ body[data-ds-dark-theme] .dshbg-fab {
 }
 body[data-ds-dark-theme] .dshbg-fab-dot { box-shadow: 0 0 0 2px rgba(28, 28, 31, 0.92); }
 
-.dshbg-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483000;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(9, 11, 15, 0.55);
-  -webkit-backdrop-filter: blur(7px);
-  backdrop-filter: blur(7px);
-  animation: dshbg-fade 170ms ease-out both;
-}
 .dshbg-dialog {
-  width: min(600px, 100%);
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 2147483000;
+  width: min(600px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
   overflow: auto;
   box-sizing: border-box;
@@ -522,7 +541,9 @@ body[data-ds-dark-theme] .dshbg-fab-dot { box-shadow: 0 0 0 2px rgba(28, 28, 31,
   border: 0.5px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
   font-family: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif);
-  animation: dshbg-rise 190ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  animation: dshbg-fade 170ms ease-out both;
 }
 body[data-ds-dark-theme] .dshbg-dialog {
   background: rgba(28, 28, 31, 0.98);
@@ -530,8 +551,30 @@ body[data-ds-dark-theme] .dshbg-dialog {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 .dshbg-dialog * { box-sizing: border-box; }
-.dshbg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.dshbg-dialog.is-dragging { user-select: none; }
+.dshbg-dialog.is-dragging .dshbg-head { cursor: grabbing; }
+.dshbg-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 .dshbg-head-main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.dshbg-grip {
+  flex: none;
+  width: 10px;
+  height: 22px;
+  margin-top: 9px;
+  border-radius: 3px;
+  opacity: 0.45;
+  background-image: radial-gradient(circle, currentColor 1.2px, transparent 1.4px);
+  background-size: 5px 5px;
+  background-position: center;
+}
 .dshbg-badge {
   flex: none;
   width: 40px;
@@ -818,13 +861,11 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
 .dshbg-foot-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 
 @keyframes dshbg-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes dshbg-rise { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-  .dshbg-mask, .dshbg-dialog { animation: none; }
+  .dshbg-dialog { animation: none; }
   .dshbg-fab, .dshbg-btn, .dshbg-primary, .dshbg-switch-track, .dshbg-switch-thumb, .dshbg-preview-image { transition: none; }
 }
 @media (max-width: 560px) {
-  .dshbg-mask { padding: 12px; }
   .dshbg-dialog { max-height: calc(100vh - 24px); padding: 18px; border-radius: 14px; }
   .dshbg-preview { height: 170px; }
   .dshbg-foot { flex-direction: column; align-items: stretch; }
@@ -847,6 +888,10 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
       const [confirmRemove, setConfirmRemove] = useState(false)
       const [imageProbeUrl, setImageProbeUrl] = useState('')
       const [probeNonce, setProbeNonce] = useState(0)
+      const [panelPos, setPanelPos] = useState(null)
+      const [panelDragging, setPanelDragging] = useState(false)
+      const [fabPos, setFabPos] = useState(() => readStoredPosition(FAB_POSITION_KEY))
+      const [fabDragging, setFabDragging] = useState(false)
 
       const settingsRef = useRef(DEFAULT_SETTINGS)
       const loadedRef = useRef(false)
@@ -857,6 +902,11 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
       const primaryActionRef = useRef(null)
       const dialogRef = useRef(null)
       const closeRef = useRef(() => {})
+      const panelDragRef = useRef(null)
+      const fabRef = useRef(null)
+      const fabPosRef = useRef(fabPos)
+      const fabDragRef = useRef(null)
+      const suppressFabClick = useRef(false)
 
       const imageUrl = image && typeof image.url === 'string' ? resolveUrl(image.url) : ''
       const active = Boolean(image && settings.enabled && imageStatus !== 'error')
@@ -998,27 +1048,9 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
         if (!open) return
         const previous = document.activeElement
         const onKey = (event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault()
-            closeRef.current()
-            return
-          }
-          if (event.key !== 'Tab' || !dialogRef.current) return
-          const focusables = Array.from(
-            dialogRef.current.querySelectorAll(
-              'button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
-            ),
-          ).filter((node) => node.offsetParent !== null)
-          if (focusables.length === 0) return
-          const first = focusables[0]
-          const last = focusables[focusables.length - 1]
-          if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault()
-            last.focus()
-          } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault()
-            first.focus()
-          }
+          if (event.key !== 'Escape') return
+          event.preventDefault()
+          closeRef.current()
         }
         document.addEventListener('keydown', onKey, true)
         const focusTimer = window.setTimeout(() => {
@@ -1032,13 +1064,120 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
       }, [open])
 
       useEffect(() => {
-        if (!open) return
-        const previous = document.body.style.overflow
-        document.body.style.overflow = 'hidden'
+        if (!panelDragging) return
+        const move = (event) => {
+          const drag = panelDragRef.current
+          if (!drag) return
+          const maxX = Math.max(8, window.innerWidth - drag.width - 8)
+          const maxY = Math.max(8, window.innerHeight - drag.height - 8)
+          setPanelPos({
+            x: Math.min(maxX, Math.max(8, event.clientX - drag.offsetX)),
+            y: Math.min(maxY, Math.max(8, event.clientY - drag.offsetY)),
+          })
+        }
+        const stop = () => {
+          panelDragRef.current = null
+          setPanelDragging(false)
+        }
+        window.addEventListener('pointermove', move)
+        window.addEventListener('pointerup', stop)
+        window.addEventListener('pointercancel', stop)
         return () => {
-          document.body.style.overflow = previous
+          window.removeEventListener('pointermove', move)
+          window.removeEventListener('pointerup', stop)
+          window.removeEventListener('pointercancel', stop)
+        }
+      }, [panelDragging])
+
+      useEffect(() => {
+        if (!open) return
+        const clampToViewport = () => {
+          const node = dialogRef.current
+          if (!node) return
+          const rect = node.getBoundingClientRect()
+          setPanelPos((current) => {
+            if (!current) return current
+            const maxX = Math.max(8, window.innerWidth - rect.width - 8)
+            const maxY = Math.max(8, window.innerHeight - rect.height - 8)
+            const x = Math.min(maxX, Math.max(8, current.x))
+            const y = Math.min(maxY, Math.max(8, current.y))
+            return x === current.x && y === current.y ? current : { x, y }
+          })
+        }
+        const frame = window.requestAnimationFrame(clampToViewport)
+        window.addEventListener('resize', clampToViewport)
+        return () => {
+          window.cancelAnimationFrame(frame)
+          window.removeEventListener('resize', clampToViewport)
         }
       }, [open])
+
+      useEffect(() => {
+        if (!fabDragging) return
+        const move = (event) => {
+          const drag = fabDragRef.current
+          if (!drag) return
+          if (!drag.moved) {
+            if (Math.abs(event.clientX - drag.startX) <= 4 && Math.abs(event.clientY - drag.startY) <= 4) return
+            drag.moved = true
+          }
+          const maxX = Math.max(8, window.innerWidth - drag.width - 8)
+          const maxY = Math.max(8, window.innerHeight - drag.height - 8)
+          const next = {
+            x: Math.min(maxX, Math.max(8, event.clientX - drag.offsetX)),
+            y: Math.min(maxY, Math.max(8, event.clientY - drag.offsetY)),
+          }
+          fabPosRef.current = next
+          setFabPos(next)
+        }
+        const stop = () => {
+          const drag = fabDragRef.current
+          fabDragRef.current = null
+          setFabDragging(false)
+          if (drag && drag.moved) {
+            suppressFabClick.current = true
+            if (fabPosRef.current) writeStoredPosition(FAB_POSITION_KEY, fabPosRef.current)
+            window.setTimeout(() => {
+              suppressFabClick.current = false
+            }, 450)
+          }
+        }
+        window.addEventListener('pointermove', move)
+        window.addEventListener('pointerup', stop)
+        window.addEventListener('pointercancel', stop)
+        return () => {
+          window.removeEventListener('pointermove', move)
+          window.removeEventListener('pointerup', stop)
+          window.removeEventListener('pointercancel', stop)
+        }
+      }, [fabDragging])
+
+      useEffect(() => {
+        if (fabPos === null) return
+        const clampToViewport = () => {
+          const node = fabRef.current
+          const current = fabPosRef.current
+          if (!node || !current) return
+          const rect = node.getBoundingClientRect()
+          const maxX = Math.max(8, window.innerWidth - rect.width - 8)
+          const maxY = Math.max(8, window.innerHeight - rect.height - 8)
+          const next = {
+            x: Math.min(maxX, Math.max(8, current.x)),
+            y: Math.min(maxY, Math.max(8, current.y)),
+          }
+          if (next.x !== current.x || next.y !== current.y) {
+            fabPosRef.current = next
+            setFabPos(next)
+            writeStoredPosition(FAB_POSITION_KEY, next)
+          }
+        }
+        const frame = window.requestAnimationFrame(clampToViewport)
+        window.addEventListener('resize', clampToViewport)
+        return () => {
+          window.cancelAnimationFrame(frame)
+          window.removeEventListener('resize', clampToViewport)
+        }
+      }, [fabPos === null])
 
       useEffect(() => {
         if (!open) setConfirmRemove(false)
@@ -1100,10 +1239,79 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
       }
 
       function closePanel() {
+        panelDragRef.current = null
+        setPanelDragging(false)
         flushSave()
         setOpen(false)
       }
       closeRef.current = closePanel
+
+      function startPanelDrag(event) {
+        if (event.button !== 0) return
+        const target = event.target
+        if (target && typeof target.closest === 'function' && target.closest('button, a, input, select, textarea, [role="switch"]')) {
+          return
+        }
+        const node = dialogRef.current
+        if (!node) return
+        const rect = node.getBoundingClientRect()
+        panelDragRef.current = {
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top,
+          width: rect.width,
+          height: rect.height,
+        }
+        setPanelPos({ x: rect.left, y: rect.top })
+        setPanelDragging(true)
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId)
+        } catch {
+          /* pointer capture is an enhancement; window listeners still work */
+        }
+        event.preventDefault()
+      }
+
+      function centerPanel() {
+        const node = dialogRef.current
+        if (!node) return
+        const rect = node.getBoundingClientRect()
+        setPanelPos({
+          x: Math.max(8, (window.innerWidth - rect.width) / 2),
+          y: Math.max(8, (window.innerHeight - rect.height) / 2),
+        })
+      }
+
+      function startFabDrag(event) {
+        if (event.button !== 0) return
+        suppressFabClick.current = false
+        const node = fabRef.current
+        if (!node) return
+        const rect = node.getBoundingClientRect()
+        fabDragRef.current = {
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top,
+          width: rect.width,
+          height: rect.height,
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false,
+        }
+        setFabDragging(true)
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId)
+        } catch {
+          /* pointer capture is an enhancement; window listeners still work */
+        }
+      }
+
+      function onFabClick(event) {
+        if (suppressFabClick.current) {
+          suppressFabClick.current = false
+          event.preventDefault()
+          return
+        }
+        setOpen(true)
+      }
 
       async function importFile(file) {
         if (!file) return
@@ -1260,28 +1468,26 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
         ? h(
             'div',
             {
-              className: 'dshbg-mask',
-              onMouseDown: (event) => {
-                if (event.target === event.currentTarget) closePanel()
-              },
+              ref: dialogRef,
+              className: `dshbg-dialog${panelDragging ? ' is-dragging' : ''}`,
+              role: 'dialog',
+              'aria-labelledby': 'dshbg-title',
+              tabIndex: -1,
+              style: panelPos ? { left: `${panelPos.x}px`, top: `${panelPos.y}px`, transform: 'none' } : undefined,
             },
             h(
               'div',
               {
-                ref: dialogRef,
-                className: 'dshbg-dialog',
-                role: 'dialog',
-                'aria-modal': 'true',
-                'aria-labelledby': 'dshbg-title',
-                tabIndex: -1,
+                className: 'dshbg-head',
+                title: tr('dragHint'),
+                onPointerDown: startPanelDrag,
+                onDoubleClick: centerPanel,
               },
               h(
                 'div',
-                { className: 'dshbg-head' },
-                h(
-                  'div',
-                  { className: 'dshbg-head-main' },
-                  h('div', { className: 'dshbg-badge', 'aria-hidden': 'true' }, h(IconImage, { size: 21 })),
+                { className: 'dshbg-head-main' },
+                h('span', { className: 'dshbg-grip', 'aria-hidden': 'true' }),
+                h('div', { className: 'dshbg-badge', 'aria-hidden': 'true' }, h(IconImage, { size: 21 })),
                   h(
                     'div',
                     null,
@@ -1451,8 +1657,7 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
                 ),
                 h('button', { type: 'button', className: 'dshbg-primary', onClick: closePanel }, tr('done')),
               ),
-            ),
-          )
+            )
         : null
 
       return h(
@@ -1462,12 +1667,23 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
         h(
           'button',
           {
+            ref: fabRef,
             type: 'button',
-            className: 'dshbg-fab',
+            className: `dshbg-fab${fabDragging ? ' is-dragging' : ''}`,
             'data-active': active ? 'true' : 'false',
             'aria-label': tr('fab'),
-            title: tr('fab'),
-            onClick: () => setOpen(true),
+            title: `${tr('fab')} · ${tr('fabHint')}`,
+            style: fabPos
+              ? {
+                  left: `${fabPos.x}px`,
+                  top: `${fabPos.y}px`,
+                  right: 'auto',
+                  bottom: 'auto',
+                  transform: 'none',
+                }
+              : undefined,
+            onPointerDown: startFabDrag,
+            onClick: onFabClick,
           },
           h(IconImage, { size: 18 }),
           active ? h('span', { className: 'dshbg-fab-dot', 'aria-hidden': 'true' }) : null,
@@ -1487,14 +1703,14 @@ body[data-ds-dark-theme] .dshbg-seg button[aria-pressed="true"] {
       inject: ['slots', 'locale'],
       apply(ctx) {
         const register = () => ctx.locale.register(NS, { zh: ZH, en: EN })
-        if (typeof ctx.effect === 'function') ctx.effect(register, 'dsh-background: locale')
+        if (typeof ctx.effect === 'function') ctx.effect(register, 'dsh-background-studio: locale')
         else register()
         const t = ctx.locale.bind(NS)
         ctx.slots.inject('shell.overlay', () =>
           ctx.slots.register(
             {
               name: 'shell.overlay',
-              id: 'dsh-background',
+              id: 'dsh-background-studio',
               order: 40,
               locale: NS,
               inject: () => ({ t }),

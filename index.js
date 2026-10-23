@@ -1,17 +1,19 @@
 /**
- * dsh-background — Host half.
+ * dsh-background-studio — Host half.
  *
  * Keeps the imported image and the display settings on disk, and exposes a
  * tiny same-origin HTTP surface for the browser half:
  *
- *   GET    /dsh-background/api/state      current settings + image metadata
- *   POST   /dsh-background/api/settings   update display settings
- *   POST   /dsh-background/api/image      upload/replace the image
- *   DELETE /dsh-background/api/image      remove the image
- *   GET    /dsh-background/image          the image bytes
+ *   GET    /dsh-background-studio/api/state      current settings + image metadata
+ *   POST   /dsh-background-studio/api/settings   update display settings
+ *   POST   /dsh-background-studio/api/image      upload/replace the image
+ *   DELETE /dsh-background-studio/api/image      remove the image
+ *   GET    /dsh-background-studio/image          the image bytes
  *
  * Data lives in `$DSH_HOME/dsh-background/`, outside the installed package so
  * updating or reinstalling the plugin does not delete the user's wallpaper.
+ * The directory keeps its original name so images saved by version 1.0.x are
+ * still available after the package rename.
  */
 import { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
@@ -19,12 +21,12 @@ import fsp from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-export const name = 'dsh-background'
+export const name = 'dsh-background-studio'
 
 /** No mandatory services: webServer arrives through ctx.inject when present. */
 export const inject = []
 
-export const ROUTE_PREFIX = '/dsh-background'
+export const ROUTE_PREFIX = '/dsh-background-studio'
 
 export const ROUTES = Object.freeze({
   state: `${ROUTE_PREFIX}/api/state`,
@@ -33,6 +35,7 @@ export const ROUTES = Object.freeze({
   image: `${ROUTE_PREFIX}/image`,
 })
 
+/** Legacy data directory, intentionally kept across the package rename. */
 const DATA_DIR = 'dsh-background'
 const IMAGE_LIMIT = 25 * 1024 * 1024
 const JSON_LIMIT = 16 * 1024
