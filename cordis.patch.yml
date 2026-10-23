@@ -1,0 +1,7 @@
+# dsh-background bundle layer.
+#
+# `name` must match the installed package name exactly; otherwise the Loader
+# skips the row with only a warning.
+- insert:
+    - id: dsh-background
+      name: dsh-background
