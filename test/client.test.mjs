@@ -112,7 +112,11 @@ test('client module registers a shell.overlay entry and renders its empty state'
   const nodes = flatten(tree)
   const style = nodes.find((node) => node.type === 'style')
   assert.ok(style)
-  assert.match(style.props.dangerouslySetInnerHTML.__html, /data-dshbg/)
+  const css = style.props.dangerouslySetInnerHTML.__html
+  assert.match(css, /data-dshbg/)
+  assert.match(css, /\[role="dialog"\]\[aria-modal="true"\]/)
+  assert.match(css, /\[data-shortcut-modal="settings"\]/)
+  assert.match(css, /--dsw-static-neutral-bluish-850/)
   const fab = nodes.find((node) => node.props && node.props.className === 'dshbg-fab')
   assert.ok(fab)
   assert.equal(fab.props['aria-label'], '背景图片')

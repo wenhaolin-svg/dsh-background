@@ -29,16 +29,16 @@
 4. 底部提交信息填：
 
    ```text
-   Release v1.1.1: rename to dsh-background-studio, draggable panel and launcher
+   Release v1.1.2: rename to dsh-background-studio, draggable panel and launcher
    ```
 
 5. 点击 **Commit changes**。
 6. 打开仓库首页，确认：
    - `package.json` 里的 `"name"` 是 `dsh-background-studio`；
-   - `"version"` 是 `1.1.1`；
+   - `"version"` 是 `1.1.2`；
    - `cordis.patch.yml` 里的 `name` 也是 `dsh-background-studio`。
 
-> 不要把 `dsh-background-studio-1.1.1.tgz` 上传到代码文件里；它是 Release 附件，后面单独用。
+> 不要把 `dsh-background-studio-1.1.2.tgz` 上传到代码文件里；它是 Release 附件，后面单独用。
 >
 > 如果你把 GitHub 仓库改名成了 `dsh-background-studio`，记得把 `package.json` 里的 `repository`、`homepage`、`bugs` 三个地址一起改成新仓库地址。GitHub 会自动重定向旧地址，但包元信息最好保持一致。
 
@@ -47,7 +47,7 @@
 1. 打开 GitHub Desktop，选择你的仓库。
 2. 把 `D:\dsh\插件` 里的新文件复制到本地仓库目录，覆盖旧文件。
 3. 在左侧 Changes 里确认 `package.json`、`client.js`、`index.js`、`cordis.patch.yml` 都变了。
-4. Summary 填 `Release v1.1.1`，点 **Commit to main**。
+4. Summary 填 `Release v1.1.2`，点 **Commit to main**。
 5. 点 **Push origin**。
 
 ---
@@ -220,16 +220,16 @@ git push -u origin main
    会得到：
 
    ```text
-   dsh-background-studio-1.1.1.tgz
+   dsh-background-studio-1.1.2.tgz
    ```
 
-   > 本机没有 `pnpm` 命令也没关系：`D:\dsh\插件\dsh-background-studio-1.1.1.tgz` 已经生成好了，直接上传这个文件即可。
+   > 本机没有 `pnpm` 命令也没关系：`D:\dsh\插件\dsh-background-studio-1.1.2.tgz` 已经生成好了，直接上传这个文件即可。
 
-2. 在 GitHub 仓库创建 Release `v1.1.1`，把这个 `.tgz` 作为附件上传。
+2. 在 GitHub 仓库创建 Release `v1.1.2`，把这个 `.tgz` 作为附件上传。
 3. 在上面的 YAML 里加一行 `tarball`：
 
    ```yaml
-   tarball: https://github.com/wenhaolin-svg/dsh-background/releases/download/v1.1.1/dsh-background-studio-1.1.1.tgz
+   tarball: https://github.com/wenhaolin-svg/dsh-background/releases/download/v1.1.2/dsh-background-studio-1.1.2.tgz
    ```
 
    注意：这里用的是**钉住版本号**的 Release 地址，文件名里的版本号要和实际附件一致，否则会 404。
@@ -248,7 +248,7 @@ git push -u origin main
 
 ## 后续更新版本
 
-1. 修改代码后，把 `package.json` 的 `version` 从 `1.1.1` 改成 `1.1.2`。
+1. 修改代码后，把 `package.json` 的 `version` 从 `1.1.2` 改成 `1.1.3`。
 2. 提交并推送。
 3. 在 DSH 插件页先卸载旧版，再按上面的地址重新安装（DSH 当前不会自动把 Git 安装的第三方插件升级到新提交）。
 4. 刷新页面。
@@ -258,7 +258,7 @@ git push -u origin main
 ## 可选：打一个 Release
 
 1. 在 GitHub 仓库页面点击右侧 **Releases → Create a new release**。
-2. Tag 填 `v1.1.1`，标题填 `dsh-background-studio v1.1.1`。
+2. Tag 填 `v1.1.2`，标题填 `dsh-background-studio v1.1.2`。
 3. 描述里写主要功能。
 4. 点击 **Publish release**。
 

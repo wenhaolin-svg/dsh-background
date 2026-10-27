@@ -474,6 +474,35 @@ html[data-dshbg="on"] body[data-ds-dark-theme] {
   --dsw-specific-sidebar-fill: rgba(24, 24, 26, var(--dshbg-sidebar-dark, 0.62)) !important;
 }
 
+/*
+ * DSH's own settings dialog is portaled to <body> and uses the theme surface
+ * tokens. Restore the original opaque palette inside that dialog subtree so
+ * its navigation, cards and text stay readable over the wallpaper. The
+ * plugin's own floating panel has no aria-modal, so it is not affected.
+ */
+html[data-dshbg="on"] body [role="dialog"][aria-modal="true"] {
+  --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-00, #fff) !important;
+  --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-00, #fff) !important;
+  --dsw-alias-bg-layer-2: var(--dsw-static-neutral-bluish-00, #fff) !important;
+  --dsw-alias-bg-layer-3: var(--dsw-static-neutral-bluish-00, #fff) !important;
+  --dsw-specific-sidebar-fill: var(--dsw-static-neutral-bluish-50, #fafafa) !important;
+}
+html[data-dshbg="on"] body[data-ds-dark-theme] [role="dialog"][aria-modal="true"] {
+  --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-950, #151517) !important;
+  --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-875, #232324) !important;
+  --dsw-alias-bg-layer-2: var(--dsw-static-neutral-bluish-850, #2c2c2e) !important;
+  --dsw-alias-bg-layer-3: var(--dsw-static-neutral-bluish-800, #353638) !important;
+  --dsw-specific-sidebar-fill: var(--dsw-static-neutral-bluish-900, #1b1b1c) !important;
+}
+
+/* Belt and braces for the settings modal itself. */
+html[data-dshbg="on"] body [data-shortcut-modal="settings"] {
+  background-color: var(--dsw-static-neutral-bluish-00, #fff) !important;
+}
+html[data-dshbg="on"] body[data-ds-dark-theme] [data-shortcut-modal="settings"] {
+  background-color: var(--dsw-static-neutral-bluish-850, #2c2c2e) !important;
+}
+
 .dshbg-fab {
   all: unset;
   box-sizing: border-box;
